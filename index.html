@@ -1,0 +1,92 @@
+<div class="container">
+  <div class="preview">
+    <canvas class="canvas js-canvas"></canvas>
+  </div>
+  <div class="controls">
+    <buttom class="button button--secondary mr-xxsmall js-generate-image">
+      Generate image
+    </buttom>
+    <buttom class="button button--primary js-use-image">Use image</buttom>
+  </div>
+</div>
+
+<script>
+
+const btnGenerate = document.querySelector('.js-generate-image')
+const btnUseImage = document.querySelector('.js-use-image')
+let imageBytes;
+
+const generateImageCanvas = async () => {
+  const canvas = document.querySelector('.js-canvas')
+  const imageUrl = `https://picsum.photos/300/200?random=${Date.now()}`
+  const ctx = canvas.getContext('2d')
+  const img = new Image()
+  const reader = new FileReader()
+  img.crossOrigin = 'Anonymous';
+  img.src = imageUrl
+
+  img.addEventListener('load', () => {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+    canvas.toBlob(blob => {
+      reader.addEventListener('load', () => {
+        imageBytes = new Uint8Array(reader.result)
+      })
+      reader.readAsArrayBuffer(blob)
+    })
+  }, false)
+}
+
+generateImageCanvas()
+
+btnGenerate.addEventListener('click', (e) => {
+  e.preventDefault()
+  generateImageCanvas()
+})
+
+btnUseImage.addEventListener('click', (e) => {
+  e.preventDefault()
+  window.parent.postMessage(
+      {
+        pluginMessage: {
+          action: 'image',
+          data: imageBytes
+        }
+      },
+      '*'
+    )
+})
+
+</script>
+
+<style>
+@import url('https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds@master/dist/figma-plugin-ds.css');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.canvas {
+  width: 300px;
+  height: 200px;
+}
+
+.controls {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+}
+</style>
